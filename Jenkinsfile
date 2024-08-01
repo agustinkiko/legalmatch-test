@@ -1,9 +1,18 @@
 pipeline {
     agent any
     
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['dev', 'staging', 'prod'],
+            description: 'Choose the environment to deploy'
+        )
+    }
+
     environment {
         TERRAGRUNT_VERSION = "v0.58.9"
         TERRAFORM_VERSION = "1.9.3"
+        AWS_PROFILE = "legalmatch"
     }
     
     stages {
@@ -30,38 +39,13 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/agustinkiko/legalmatch-test.git'
             }
         }
-        
-        stage('Terraform Init & Apply Dev') {
+
+        stage('Terraform Init & Apply') {
             steps {
-                dir('env/dev') {
-                    script {
-                        withEnv(["AWS_PROFILE=legalmatch"]) {
-                            sh 'terragrunt init'
-                            sh 'terragrunt apply -auto-approve'
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Terraform Init & Apply Staging') {
-            steps {
-                dir('env/staging') {
-                    script {
-                        withEnv(["AWS_PROFILE=legalmatch"]) {
-                            sh 'terragrunt init'
-                            sh 'terragrunt apply -auto-approve'
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Terraform Init & Apply Prod') {
-            steps {
-                dir('env/prod') {
-                    script {
-                        withEnv(["AWS_PROFILE=legalmatch"]) {
+                script {
+                    def envDir = "env/${params.ENVIRONMENT}"
+                    dir(envDir) {
+                        withEnv(["AWS_PROFILE=${env.AWS_PROFILE}"]) {
                             sh 'terragrunt init'
                             sh 'terragrunt apply -auto-approve'
                         }
