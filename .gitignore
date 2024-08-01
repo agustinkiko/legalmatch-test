@@ -1,0 +1,4 @@
+.terraform.lock.hcl
+.terragrunt-cache
+docker
+.DS_Store
